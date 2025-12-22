@@ -28,6 +28,20 @@ func TestMetadataFunctions(t *testing.T) {
 		expectedValue  string
 	}{
 		{
+			name:           "LIST DATABASES",
+			query:          "LIST DATABASES",
+			shouldHandle:   true,
+			expectedColumn: "name",
+			expectedValue:  "", // Will check columns instead
+		},
+		{
+			name:           "LIST DATABASES with semicolon",
+			query:          "LIST DATABASES;",
+			shouldHandle:   true,
+			expectedColumn: "name",
+			expectedValue:  "",
+		},
+		{
 			name:           "current_database() lowercase",
 			query:          "SELECT current_database()",
 			shouldHandle:   true,
@@ -110,6 +124,24 @@ func TestMetadataFunctions(t *testing.T) {
 
 			// Check column name
 			cols := rows.(*Rows).columns
+			
+			// Special handling for LIST DATABASES
+			if tt.query == "LIST DATABASES" || tt.query == "LIST DATABASES;" {
+				if len(cols) != 3 {
+					t.Errorf("Expected 3 columns for LIST DATABASES, got %d", len(cols))
+					return
+				}
+				if cols[0] != "name" || cols[1] != "uuid" || cols[2] != "version" {
+					t.Errorf("Expected columns [name, uuid, version], got %v", cols)
+				}
+				// For tests with nil client, rows should be empty
+				rowData := rows.(*Rows).rows
+				if len(rowData) != 0 {
+					t.Errorf("Expected empty rows for LIST DATABASES in test, got %d rows", len(rowData))
+				}
+				return
+			}
+			
 			if len(cols) != 1 {
 				t.Errorf("Expected 1 column, got %d", len(cols))
 				return

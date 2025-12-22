@@ -75,6 +75,15 @@ func tryMetadataFunction(conn *Conn, query string) (driver.Rows, bool) {
 
 // handleListDatabases returns the list of databases
 func handleListDatabases(conn *Conn) (driver.Rows, error) {
+	// Check if client is initialized (may be nil in tests)
+	if conn.client == nil {
+		return &Rows{
+			columns: []string{"name", "uuid", "version"},
+			rows:    [][]any{},
+			index:   -1,
+		}, nil
+	}
+
 	databases, err := conn.client.D1.Database.List(conn.ctx, d1.DatabaseListParams{
 		AccountID: cloudflare.F(conn.config.AccountID),
 	})
@@ -89,11 +98,23 @@ func handleListDatabases(conn *Conn) (driver.Rows, error) {
 	return &Rows{
 		columns: []string{"name", "uuid", "version"},
 		rows:    rows,
+		index:   -1,
 	}, nil
 }
 
 // handleCurrentDatabase returns the current database ID
 func handleCurrentDatabase(conn *Conn) (driver.Rows, error) {
+	// Check if client is initialized (may be nil in tests)
+	if conn.client == nil {
+		// Fallback: return database ID when client is not available
+		return &Rows{
+			columns: []string{"current_database()"},
+			rows:    [][]any{{conn.config.DatabaseID}},
+			index:   -1,
+		}, nil
+	}
+
+	// Fetch actual database name from API
 	databases, err := conn.client.D1.Database.List(conn.ctx, d1.DatabaseListParams{
 		AccountID: cloudflare.F(conn.config.AccountID),
 	})

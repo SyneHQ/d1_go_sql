@@ -42,10 +42,12 @@ Parameters:
 # Features
 
   - Full database/sql interface implementation
+  - Official Cloudflare Go SDK (v6) integration
   - Connection pooling support
   - Prepared statements with parameter binding
   - Transaction support
   - Context-aware operations
+  - Metadata functions (current_database, current_user, version, connection_id)
   - Comprehensive type conversion
   - Production-ready error handling
 

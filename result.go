@@ -15,4 +15,3 @@ func (r *Result) LastInsertId() (int64, error) {
 func (r *Result) RowsAffected() (int64, error) {
 	return r.rowsAffected, nil
 }
-

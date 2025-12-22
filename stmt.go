@@ -51,4 +51,3 @@ func (s *Stmt) QueryContext(ctx context.Context, args []driver.NamedValue) (driv
 
 	return s.conn.QueryContext(ctx, s.query, args)
 }
-

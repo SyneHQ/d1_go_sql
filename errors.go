@@ -29,4 +29,3 @@ var (
 	// ErrQueryFailed is returned when a query fails
 	ErrQueryFailed = errors.New("query failed")
 )
-

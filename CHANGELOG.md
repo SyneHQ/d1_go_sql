@@ -18,7 +18,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Comprehensive type conversion (string, int64, float64, bool, []byte, time.Time, nil)
 - DSN parsing and validation
 - Error handling with detailed error messages
-- Complete test coverage (36.6% coverage)
+- Metadata functions: `current_database()`, `current_user()`, `version()`, `connection_id()`
+- Function aliases: `database()`, `user()`
+- Complete test coverage (39.4% coverage)
 - Example applications
 - Comprehensive documentation (README, ARCHITECTURE, CONTRIBUTING)
 - Production-grade code following DRY principles

@@ -228,7 +228,7 @@ func TestConfigValidate(t *testing.T) {
 
 // Helper function
 func contains(s, substr string) bool {
-	return len(s) >= len(substr) && (s == substr || len(substr) == 0 || 
+	return len(s) >= len(substr) && (s == substr || len(substr) == 0 ||
 		(len(s) > 0 && len(substr) > 0 && indexOf(s, substr) >= 0))
 }
 
@@ -240,4 +240,3 @@ func indexOf(s, substr string) int {
 	}
 	return -1
 }
-

@@ -196,7 +196,7 @@ func TestConvertValue(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got := convertValue(tt.value)
-			
+
 			// Special handling for byte slices
 			if gotBytes, ok := got.([]byte); ok {
 				wantBytes, ok := tt.want.([]byte)
@@ -293,4 +293,3 @@ func TestNamedValuesFromValues(t *testing.T) {
 		}
 	}
 }
-

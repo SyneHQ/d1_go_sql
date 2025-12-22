@@ -168,6 +168,13 @@ func (c *Conn) execQuery(ctx context.Context, query string, args []driver.Value)
 
 // queryRows executes a query and returns rows
 func (c *Conn) queryRows(ctx context.Context, query string, args []driver.Value) (driver.Rows, error) {
+	// Check if this is a metadata function call (only for queries without parameters)
+	if len(args) == 0 {
+		if rows, handled := tryMetadataFunction(c, query); handled {
+			return rows, nil
+		}
+	}
+
 	boundQuery, err := bindParameters(query, args)
 	if err != nil {
 		return nil, err

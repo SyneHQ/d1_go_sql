@@ -26,13 +26,13 @@ func (r *Rows) Close() error {
 // Next is called to populate the next row of data into the provided slice
 func (r *Rows) Next(dest []driver.Value) error {
 	r.index++
-	
+
 	if r.index >= len(r.rows) {
 		return io.EOF
 	}
 
 	row := r.rows[r.index]
-	
+
 	if len(dest) != len(row) {
 		return driver.ErrSkip
 	}
@@ -43,4 +43,3 @@ func (r *Rows) Next(dest []driver.Value) error {
 
 	return nil
 }
-

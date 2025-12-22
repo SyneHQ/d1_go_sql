@@ -5,11 +5,13 @@ A production-grade Go `database/sql` driver for Cloudflare D1, enabling seamless
 ## Features
 
 - ✅ Full `database/sql` interface implementation
+- ✅ Official Cloudflare Go SDK (v6) integration
 - ✅ Connection pooling support
 - ✅ Prepared statements with parameter binding
 - ✅ Transaction support
 - ✅ Proper type conversion (string, int64, float64, bool, []byte, time.Time, nil)
 - ✅ Context-aware operations
+- ✅ Metadata functions (current_database, current_user, version, connection_id)
 - ✅ Comprehensive error handling
 - ✅ Production-ready with best practices
 
@@ -150,6 +152,40 @@ defer cancel()
 
 rows, err := db.QueryContext(ctx, "SELECT * FROM users")
 ```
+
+### Metadata Functions
+
+The driver supports special metadata functions that return connection information without querying D1:
+
+```go
+// Get current database ID
+var dbName string
+db.QueryRow("SELECT current_database()").Scan(&dbName)
+// Returns: your-database-id
+
+// Get current account ID (user)
+var accountID string
+db.QueryRow("SELECT current_user()").Scan(&accountID)
+// Returns: your-account-id
+
+// Get driver version
+var version string
+db.QueryRow("SELECT version()").Scan(&version)
+// Returns: D1 Go SQL Driver v0.1.0 (Cloudflare D1 - SQLite compatible)
+
+// Get connection ID
+var connID string
+db.QueryRow("SELECT connection_id()").Scan(&connID)
+// Returns: account-id:database-id
+```
+
+**Supported Functions:**
+- `current_database()` / `database()` - Returns the D1 database ID
+- `current_user()` / `user()` - Returns the Cloudflare account ID
+- `version()` - Returns driver and database version information
+- `connection_id()` - Returns a unique connection identifier
+
+These functions are case-insensitive and execute instantly without API calls.
 
 ## Architecture
 

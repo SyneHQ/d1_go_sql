@@ -13,7 +13,7 @@ A production-grade Go `database/sql` driver for Cloudflare D1, enabling seamless
 - ✅ Transaction support
 - ✅ Proper type conversion (string, int64, float64, bool, []byte, time.Time, nil)
 - ✅ Context-aware operations
-- ✅ Metadata functions (current_database, current_user, version, connection_id)
+- ✅ Metadata commands and functions (LIST DATABASES, current_database, current_user, version, connection_id)
 - ✅ Comprehensive error handling
 - ✅ Production-ready with best practices
 

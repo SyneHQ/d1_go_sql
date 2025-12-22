@@ -47,7 +47,7 @@ Parameters:
   - Prepared statements with parameter binding
   - Transaction support
   - Context-aware operations
-  - Metadata functions (current_database, current_user, version, connection_id)
+  - Metadata commands and functions (LIST DATABASES, current_database, current_user, version, connection_id)
   - Comprehensive type conversion
   - Production-ready error handling
 

@@ -75,18 +75,20 @@ db.QueryRow("SELECT connection_id()").Scan(&connID)
 ## Running the Example
 
 1. Update the DSN in `main.go` with your credentials:
+
    ```go
    dsn := "d1://your-account-id:your-api-token@your-database-id"
    ```
 
 2. Run the example:
+
    ```bash
    go run main.go
    ```
 
 ## Expected Output
 
-```
+```text
 === D1 Metadata Functions Demo ===
 
 Current Database ID: your-database-id
@@ -114,4 +116,3 @@ Mixed case:           your-database-id
 3. **Multi-tenancy**: Identify which database is being used
 4. **Debugging**: Quick access to connection information
 5. **Monitoring**: Track which databases are in use
-

@@ -143,9 +143,17 @@ d1://accountID:apiToken@databaseID?timeout=30s
 
 **Key Features:**
 - Statement queuing during transaction
-- Batch execution on commit
-- Rollback support
+- Batch execution on commit using D1's batch API
+- Rollback support (discards buffered statements)
 - Nested transaction prevention
+
+**Implementation:**
+- D1 doesn't support SQL `BEGIN TRANSACTION`/`COMMIT` statements
+- Instead, uses `DatabaseQueryParamsBodyMultipleQueries` with an array of SQL statements
+- All statements within a transaction are buffered in memory
+- On `Commit()`, statements are sent as a batch array to D1's batch API
+- On `Rollback()`, buffered statements are discarded without API calls
+- This provides atomic execution of all statements in the transaction
 
 ### 8. Utilities (`utils.go`)
 

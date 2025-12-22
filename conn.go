@@ -157,7 +157,7 @@ func (c *Conn) execQuery(ctx context.Context, query string, args []driver.Value)
 	}
 
 	if err := iter.Err(); err != nil {
-		return nil, fmt.Errorf("error reading query results: %w", err)
+		return nil, fmt.Errorf("error reading query results: %s", err.Error())
 	}
 
 	return &Result{
@@ -257,20 +257,22 @@ func (t *Tx) Commit() error {
 		return nil
 	}
 
-	// Execute all statements as a batch - join with semicolon
-	batchQuery := ""
+	// Build batch array for D1 API
+	// D1 doesn't support SQL BEGIN TRANSACTION/COMMIT statements via the REST API.
+	// Instead, we use the batch API which sends an array of SQL statements to execute atomically.
+	// This provides transaction semantics without SQL transaction control statements.
+	batch := make([]d1.DatabaseQueryParamsBodyMultipleQueriesBatch, len(t.conn.txStatements))
 	for i, stmt := range t.conn.txStatements {
-		if i > 0 {
-			batchQuery += "; "
+		batch[i] = d1.DatabaseQueryParamsBodyMultipleQueriesBatch{
+			Sql: cloudflare.F(stmt),
 		}
-		batchQuery += stmt
 	}
 
-	// Execute batch query
+	// Execute batch query using D1's batch API
 	params := d1.DatabaseQueryParams{
 		AccountID: cloudflare.F(t.conn.config.AccountID),
-		Body: d1.DatabaseQueryParamsBodyD1SingleQuery{
-			Sql: cloudflare.F(batchQuery),
+		Body: d1.DatabaseQueryParamsBodyMultipleQueries{
+			Batch: cloudflare.F(batch),
 		},
 	}
 

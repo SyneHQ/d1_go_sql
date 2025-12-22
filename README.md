@@ -146,6 +146,11 @@ if err != nil {
 }
 ```
 
+**Note**: Transactions are implemented using D1's batch API. All statements within a transaction are buffered and sent as a batch when `Commit()` is called. This means:
+- No SQL `BEGIN TRANSACTION` or `COMMIT` statements are sent to D1
+- All statements execute atomically as a batch
+- `Rollback()` simply discards buffered statements without sending anything to D1
+
 ### Context Support
 
 ```go

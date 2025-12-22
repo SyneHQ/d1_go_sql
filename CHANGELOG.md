@@ -13,7 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Support for Cloudflare D1 database
 - Connection pooling support
 - Prepared statements with parameter binding
-- Transaction support with statement batching (Begin, Commit, Rollback)
+- Transaction support using D1 batch API (Begin, Commit, Rollback)
 - Context-aware operations
 - Comprehensive type conversion (string, int64, float64, bool, []byte, time.Time, nil)
 - DSN parsing and validation
@@ -23,7 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Function aliases: `database()`, `user()`
 - `current_database()` fetches actual database name via API
 - `LIST DATABASES` returns database name, UUID, and version
-- Complete test coverage (39.4% coverage)
+- Complete test coverage (37.7% coverage)
 - Example applications
 - Comprehensive documentation (README, ARCHITECTURE, CONTRIBUTING)
 - Production-grade code following DRY principles
@@ -51,6 +51,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `github.com/cloudflare/cloudflare-go/v6` v6.5.0+
 - Cloudflare D1 database
 - Cloudflare API token with D1 access
+
+### Implementation Notes
+- Transactions use D1's batch API (`DatabaseQueryParamsBodyMultipleQueries`) instead of SQL BEGIN/COMMIT statements
+- All transaction statements are buffered and sent as a batch array on commit
+- This avoids D1's restriction on SQL transaction control statements
 
 ### Documentation
 - README with usage examples

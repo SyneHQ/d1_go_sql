@@ -1,9 +1,13 @@
 package d1sql
 
 import (
+	"database/sql"
 	"database/sql/driver"
 	"regexp"
 	"strings"
+
+	"github.com/cloudflare/cloudflare-go/v6"
+	"github.com/cloudflare/cloudflare-go/v6/d1"
 )
 
 // MetadataFunction represents a supported metadata function
@@ -15,6 +19,10 @@ type MetadataFunction struct {
 var (
 	// Supported metadata functions
 	metadataFunctions = []MetadataFunction{
+		{
+			Pattern: regexp.MustCompile(`(?i)^\s*LIST\s+DATABASES\s*;?\s*$`),
+			Handler: handleListDatabases,
+		},
 		{
 			Pattern: regexp.MustCompile(`(?i)^\s*SELECT\s+current_database\s*\(\s*\)\s*;?\s*$`),
 			Handler: handleCurrentDatabase,
@@ -65,15 +73,44 @@ func tryMetadataFunction(conn *Conn, query string) (driver.Rows, bool) {
 	return nil, false
 }
 
+// handleListDatabases returns the list of databases
+func handleListDatabases(conn *Conn) (driver.Rows, error) {
+	databases, err := conn.client.D1.Database.List(conn.ctx, d1.DatabaseListParams{
+		AccountID: cloudflare.F(conn.config.AccountID),
+	})
+	if err != nil {
+		return nil, err
+	}
+	rows := make([][]any, len(databases.Result))
+	for i := range databases.Result {
+		database := databases.Result[i]
+		rows[i] = []any{database.Name, database.UUID, database.Version}
+	}
+	return &Rows{
+		columns: []string{"name", "uuid", "version"},
+		rows:    rows,
+	}, nil
+}
+
 // handleCurrentDatabase returns the current database ID
 func handleCurrentDatabase(conn *Conn) (driver.Rows, error) {
-	return &Rows{
-		columns: []string{"current_database()"},
-		rows: [][]interface{}{
-			{conn.config.DatabaseID},
-		},
-		index: -1,
-	}, nil
+	databases, err := conn.client.D1.Database.List(conn.ctx, d1.DatabaseListParams{
+		AccountID: cloudflare.F(conn.config.AccountID),
+	})
+	if err != nil {
+		return nil, err
+	}
+	for i := range databases.Result {
+		database := databases.Result[i]
+		if database.UUID == conn.config.DatabaseID {
+			return &Rows{
+				columns: []string{"current_database()"},
+				rows:    [][]any{{database.Name}},
+				index:   -1,
+			}, nil
+		}
+	}
+	return nil, sql.ErrNoRows
 }
 
 // handleCurrentUser returns the current account ID

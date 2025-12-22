@@ -26,7 +26,30 @@ func main() {
 	fmt.Println("=== D1 Metadata Functions Demo ===")
 	fmt.Println()
 
-	// Get current database ID
+	// List all databases
+	fmt.Println("Listing all databases:")
+	rows, err := db.Query("LIST DATABASES")
+	if err != nil {
+		log.Printf("Note: LIST DATABASES failed (may need real credentials): %v\n", err)
+	} else {
+		defer rows.Close()
+		count := 0
+		for rows.Next() {
+			var name, uuid, version string
+			if err := rows.Scan(&name, &uuid, &version); err != nil {
+				log.Printf("Error scanning row: %v\n", err)
+				continue
+			}
+			fmt.Printf("  - %s (UUID: %s, Version: %s)\n", name, uuid, version)
+			count++
+		}
+		if count == 0 {
+			fmt.Println("  (No databases found)")
+		}
+		fmt.Println()
+	}
+
+	// Get current database name
 	var dbID string
 	err = db.QueryRow("SELECT current_database()").Scan(&dbID)
 	if err != nil {

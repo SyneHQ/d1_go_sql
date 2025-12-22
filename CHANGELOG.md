@@ -18,8 +18,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Comprehensive type conversion (string, int64, float64, bool, []byte, time.Time, nil)
 - DSN parsing and validation
 - Error handling with detailed error messages
+- Metadata command: `LIST DATABASES` - Lists all D1 databases in account
 - Metadata functions: `current_database()`, `current_user()`, `version()`, `connection_id()`
 - Function aliases: `database()`, `user()`
+- `current_database()` fetches actual database name via API
+- `LIST DATABASES` returns database name, UUID, and version
 - Complete test coverage (39.4% coverage)
 - Example applications
 - Comprehensive documentation (README, ARCHITECTURE, CONTRIBUTING)

@@ -124,7 +124,7 @@ func TestMetadataFunctions(t *testing.T) {
 
 			// Check column name
 			cols := rows.(*Rows).columns
-			
+
 			// Special handling for LIST DATABASES
 			if tt.query == "LIST DATABASES" || tt.query == "LIST DATABASES;" {
 				if len(cols) != 3 {
@@ -141,7 +141,7 @@ func TestMetadataFunctions(t *testing.T) {
 				}
 				return
 			}
-			
+
 			if len(cols) != 1 {
 				t.Errorf("Expected 1 column, got %d", len(cols))
 				return

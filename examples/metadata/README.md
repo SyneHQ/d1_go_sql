@@ -8,34 +8,56 @@ The driver supports several metadata functions that return connection informatio
 
 ### Available Functions
 
-1. **`current_database()` / `database()`**
-   - Returns the D1 database ID
+1. **`LIST DATABASES`**
+   - Lists all D1 databases in the account
+   - Returns columns: name, uuid, version
+   - Makes an API call
+   - Example: `LIST DATABASES`
+
+2. **`current_database()` / `database()`**
+   - Returns the current D1 database name
+   - Makes an API call to fetch the actual name
    - Example: `SELECT current_database()`
 
-2. **`current_user()` / `user()`**
+3. **`current_user()` / `user()`**
    - Returns the Cloudflare account ID
    - Example: `SELECT current_user()`
 
-3. **`version()`**
+4. **`version()`**
    - Returns driver and database version information
+   - No API call
    - Example: `SELECT version()`
 
-4. **`connection_id()`**
+5. **`connection_id()`**
    - Returns a unique connection identifier (format: `account-id:database-id`)
+   - No API call
    - Example: `SELECT connection_id()`
 
 ## Features
 
 - **Case Insensitive**: All functions work with any case (lowercase, uppercase, mixed)
-- **No API Calls**: These functions execute instantly without hitting the D1 API
+- **API Calls**: `LIST DATABASES` and `current_database()` make API calls; others execute instantly
 - **Standard SQL Interface**: Use them just like regular SQL queries
 
 ## Usage
 
 ```go
-// Get database ID
-var dbID string
-db.QueryRow("SELECT current_database()").Scan(&dbID)
+// List all databases
+rows, err := db.Query("LIST DATABASES")
+if err != nil {
+    log.Fatal(err)
+}
+defer rows.Close()
+
+for rows.Next() {
+    var name, uuid, version string
+    rows.Scan(&name, &uuid, &version)
+    fmt.Printf("Database: %s (UUID: %s)\n", name, uuid)
+}
+
+// Get database name
+var dbName string
+db.QueryRow("SELECT current_database()").Scan(&dbName)
 
 // Get account ID
 var accountID string

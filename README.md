@@ -1,5 +1,7 @@
 # D1 Go SQL Driver
 
+[![Go](https://github.com/SyneHQ/d1_go_sql/actions/workflows/go.yml/badge.svg)](https://github.com/SyneHQ/d1_go_sql/actions/workflows/go.yml)
+
 A production-grade Go `database/sql` driver for Cloudflare D1, enabling seamless integration with Go's standard database interfaces.
 
 ## Features
@@ -155,13 +157,26 @@ rows, err := db.QueryContext(ctx, "SELECT * FROM users")
 
 ### Metadata Functions
 
-The driver supports special metadata functions that return connection information without querying D1:
+The driver supports special metadata functions and commands that return connection information:
 
 ```go
-// Get current database ID
+// List all databases in the account
+rows, err := db.Query("LIST DATABASES")
+if err != nil {
+    log.Fatal(err)
+}
+defer rows.Close()
+
+for rows.Next() {
+    var name, uuid, version string
+    rows.Scan(&name, &uuid, &version)
+    fmt.Printf("Database: %s (UUID: %s, Version: %s)\n", name, uuid, version)
+}
+
+// Get current database name
 var dbName string
 db.QueryRow("SELECT current_database()").Scan(&dbName)
-// Returns: your-database-id
+// Returns: database-name (fetched from API)
 
 // Get current account ID (user)
 var accountID string
@@ -180,12 +195,19 @@ db.QueryRow("SELECT connection_id()").Scan(&connID)
 ```
 
 **Supported Functions:**
-- `current_database()` / `database()` - Returns the D1 database ID
+
+- `LIST DATABASES` - Lists all D1 databases in the account (returns: name, uuid, version)
+- `current_database()` / `database()` - Returns the current D1 database name
 - `current_user()` / `user()` - Returns the Cloudflare account ID
 - `version()` - Returns driver and database version information
 - `connection_id()` - Returns a unique connection identifier
 
-These functions are case-insensitive and execute instantly without API calls.
+**Notes:**
+
+- `LIST DATABASES` makes an API call to fetch real database information
+- `current_database()` makes an API call to fetch the actual database name
+- Other functions execute instantly without API calls
+- All functions are case-insensitive
 
 ## Architecture
 

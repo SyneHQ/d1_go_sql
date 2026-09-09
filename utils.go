@@ -31,38 +31,84 @@ func namedValuesFromValues(values []driver.Value) []driver.NamedValue {
 	return named
 }
 
-// bindParameters replaces ? placeholders with actual values in SQL query
+// bindParameters substitutes anonymous SQLite placeholders in one pass over the
+// original SQL. Quoted text and comments are never interpreted as parameters,
+// and substituted values are never rescanned.
+// The installed D1 REST SDK only exposes string parameters; retain SQL value
+// types here until native binding supports the full database/sql value set.
 func bindParameters(query string, args []driver.Value) (string, error) {
-	if len(args) == 0 {
-		return query, nil
-	}
-
-	// Count the number of placeholders
-	placeholderCount := strings.Count(query, "?")
-	if placeholderCount != len(args) {
-		return "", fmt.Errorf("parameter count mismatch: query has %d placeholders, but %d arguments provided", placeholderCount, len(args))
-	}
-
-	// Replace each ? with the corresponding value
-	result := query
-	for _, arg := range args {
-		// Find the first occurrence of ?
-		index := strings.Index(result, "?")
-		if index == -1 {
-			break
+	var result strings.Builder
+	result.Grow(len(query))
+	argument := 0
+	for i := 0; i < len(query); {
+		start := i
+		switch query[i] {
+		case '\'', '"', '`', '[':
+			delimiter := query[i]
+			if delimiter == '[' {
+				delimiter = ']'
+			}
+			i++
+			for i < len(query) {
+				if query[i] == delimiter {
+					i++
+					if delimiter != ']' && i < len(query) && query[i] == delimiter {
+						i++
+						continue
+					}
+					break
+				}
+				i++
+			}
+			result.WriteString(query[start:i])
+		case '-':
+			if i+1 < len(query) && query[i+1] == '-' {
+				i += 2
+				for i < len(query) && query[i] != '\n' {
+					i++
+				}
+				result.WriteString(query[start:i])
+			} else {
+				result.WriteByte(query[i])
+				i++
+			}
+		case '/':
+			if i+1 < len(query) && query[i+1] == '*' {
+				i += 2
+				for i < len(query) {
+					if i+1 < len(query) && query[i] == '*' && query[i+1] == '/' {
+						i += 2
+						break
+					}
+					i++
+				}
+				result.WriteString(query[start:i])
+			} else {
+				result.WriteByte(query[i])
+				i++
+			}
+		case '?':
+			if i+1 < len(query) && query[i+1] >= '0' && query[i+1] <= '9' {
+				return "", fmt.Errorf("numbered parameters are not supported, use anonymous ? placeholders")
+			}
+			if argument < len(args) {
+				literal, err := valueToSQLLiteral(args[argument])
+				if err != nil {
+					return "", err
+				}
+				result.WriteString(literal)
+			}
+			argument++
+			i++
+		default:
+			result.WriteByte(query[i])
+			i++
 		}
-
-		// Convert the argument to SQL literal
-		literal, err := valueToSQLLiteral(arg)
-		if err != nil {
-			return "", err
-		}
-
-		// Replace the ? with the literal
-		result = result[:index] + literal + result[index+1:]
 	}
-
-	return result, nil
+	if argument != len(args) {
+		return "", fmt.Errorf("parameter count mismatch: query has %d placeholders, but %d arguments provided", argument, len(args))
+	}
+	return result.String(), nil
 }
 
 // valueToSQLLiteral converts a driver.Value to SQL literal string
@@ -91,8 +137,7 @@ func valueToSQLLiteral(value driver.Value) (string, error) {
 		// Format as RFC3339 which is compatible with SQLite
 		return fmt.Sprintf("'%s'", v.Format(time.RFC3339)), nil
 	default:
-		// Try to convert to string
-		return fmt.Sprintf("'%v'", v), nil
+		return "", fmt.Errorf("unsupported SQL parameter type %T", value)
 	}
 }
 
